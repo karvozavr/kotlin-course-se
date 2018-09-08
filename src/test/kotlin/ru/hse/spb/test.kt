@@ -12,12 +12,12 @@ class TestSource {
     @Test
     fun statementsTest1() {
         val solution = buildSolutionFromInput(Scanner(test1))
-        assertEquals(6, solution.solve())
+        assertEquals(6, solution.answer)
     }
 
     @Test
     fun statementsTest2() {
         val solution = buildSolutionFromInput(Scanner(test2))
-        assertEquals(9, solution.solve())
+        assertEquals(9, solution.answer)
     }
 }

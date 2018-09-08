@@ -17,27 +17,18 @@ class Solution(private val adjacencyList: Array<ArrayList<Int>>,
     private val vertexNumber = adjacencyList.size
     private val subtreeUnivNumber = IntArray(vertexNumber) { 0 }
     private val used = BooleanArray(vertexNumber) { false }
-    private var answer: Long? = null
 
     /**
-     * Finds answer to problem.
-     *
-     * @return answer to problem
+     * Answer to the problem.
      */
-    fun solve(): Long {
-        if (answer != null) {
-            return answer!!
-        }
-
+    val answer: Long by lazy {
         dfs(0)
 
         var result: Long = 0
         for (vertex in 0 until vertexNumber) {
             result += minOf(subtreeUnivNumber[vertex], univNumber - subtreeUnivNumber[vertex])
         }
-
-        answer = result
-        return result
+        result
     }
 
     /**
@@ -86,5 +77,5 @@ fun buildSolutionFromInput(input: Scanner): Solution {
 
 fun main(args: Array<String>) {
     val solution = buildSolutionFromInput(Scanner(System.`in`))
-    println(solution.solve())
+    println(solution.answer)
 }
