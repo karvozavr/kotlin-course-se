@@ -1,6 +1,6 @@
 package ru.hse.spb
 
-import java.util.*
+import java.util.Scanner
 import kotlin.collections.ArrayList
 
 /**
@@ -11,12 +11,13 @@ import kotlin.collections.ArrayList
  * @param univNumber amount of universities
  */
 class Solution(private val adjacencyList: Array<ArrayList<Int>>,
-               private val univ: Array<Boolean>,
+               private val univ: BooleanArray,
                private val univNumber: Int) {
 
     private val vertexNumber = adjacencyList.size
-    private val subtreeUnivNumber = Array(vertexNumber) { _ -> 0 }
-    private val used = Array(vertexNumber) { _ -> false }
+    private val subtreeUnivNumber = IntArray(vertexNumber) { 0 }
+    private val used = BooleanArray(vertexNumber) { false }
+    private var answer: Long? = null
 
     /**
      * Finds answer to problem.
@@ -24,14 +25,19 @@ class Solution(private val adjacencyList: Array<ArrayList<Int>>,
      * @return answer to problem
      */
     fun solve(): Long {
-        dfs(0)
-
-        var answer: Long = 0
-        for (vertex in 0 until vertexNumber) {
-            answer += Math.min(subtreeUnivNumber[vertex], univNumber - subtreeUnivNumber[vertex])
+        if (answer != null) {
+            return answer!!
         }
 
-        return answer
+        dfs(0)
+
+        var result: Long = 0
+        for (vertex in 0 until vertexNumber) {
+            result += minOf(subtreeUnivNumber[vertex], univNumber - subtreeUnivNumber[vertex])
+        }
+
+        answer = result
+        return result
     }
 
     /**
@@ -61,8 +67,8 @@ fun buildSolutionFromInput(input: Scanner): Solution {
     val n = input.nextInt()
     val k = input.nextInt()
 
-    val univ = Array(n) { _ -> false }
-    val adjacencyList = Array<ArrayList<Int>>(n) { _ -> ArrayList() }
+    val univ = BooleanArray(n) { false }
+    val adjacencyList = Array<ArrayList<Int>>(n) { ArrayList() }
 
     for (i in 0 until 2 * k) {
         univ[input.nextInt() - 1] = true
