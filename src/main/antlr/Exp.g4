@@ -1,27 +1,38 @@
 grammar Exp;
 
 
-eval returns [double value]
-    :    exp=additionExp {$value = $exp.value;}
+eval
+    :    exp=generalExp
     ;
 
-additionExp returns [double value]
-    :    m1=multiplyExp       {$value =  $m1.value;}
-         ( '+' m2=multiplyExp {$value += $m2.value;}
-         | '-' m2=multiplyExp {$value -= $m2.value;}
-         )*
+generalExp
+    :     left=additionExp
+        | left=additionExp op=LE right=generalExp
+        | left=additionExp op=GR right=generalExp
+        | left=additionExp op=GEQ right=generalExp
+        | left=additionExp op=LEQ right=generalExp
+        | left=additionExp op=EQ right=generalExp
+        | left=additionExp op=NEQ right=generalExp
+        | left=additionExp op=AND right=generalExp
+        | left=additionExp op=OR right=generalExp
     ;
 
-multiplyExp returns [double value]
-    :    a1=atomExp       {$value =  $a1.value;}
-         ( '*' a2=atomExp {$value *= $a2.value;}
-         | '/' a2=atomExp {$value /= $a2.value;}
-         )*
+additionExp
+    :      left=multiplyExp
+         | left=multiplyExp op=PLUS right=additionExp
+         | left=multiplyExp op=MINUS right=additionExp
     ;
 
-atomExp returns [double value]
-    :    n=Number                {$value = Double.parseDouble($n.text);}
-    |    '(' exp=additionExp ')' {$value = $exp.value;}
+multiplyExp
+    :      left=atomExp
+         | left=atomExp op=MUL right=multiplyExp
+         | left=atomExp op=DIV right=multiplyExp
+         | left=atomExp op=MOD right=multiplyExp
+    ;
+
+atomExp
+    :    value=Number
+    |    '(' exp=generalExp ')'
     ;
 
 
@@ -29,4 +40,18 @@ Number
     :    ('0'..'9')+ ('.' ('0'..'9')+)?
     ;
 
-WS : (' ' | '\t' | '\r'| '\n' | '//' .* '\n') -> skip;
+WHITESPACE : (' ' | '\t' | '\r'| '\n' | '//' .* '\n') -> skip;
+
+PLUS: '+';
+MUL: '*';
+MINUS: '-';
+DIV: '/';
+MOD: '%';
+AND: '&&';
+OR: '||';
+LE: '<';
+GR: '>';
+LEQ: '<=';
+GEQ: '>=';
+EQ: '==';
+NEQ: '!=';

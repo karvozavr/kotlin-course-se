@@ -1,115 +1,125 @@
 package ru.hse.spb
 
-interface ASTNodeVisitor {
-    fun visit(node: Block)
-    fun visit(node: Statement)
-    fun visit(node: Function)
-    fun visit(node: Variable)
-    fun visit(node: Expression)
-    fun visit(node: While)
-    fun visit(node: If)
-    fun visit(node: Assignment)
-    fun visit(node: Return)
-    fun visit(node: Identifier)
-    fun visit(node: ParameterNames)
-    fun visit(node: FunctionCall)
-    fun visit(node: BinaryExpression)
-    fun visit(node: Literal)
-    fun visit(node: Arguments)
+interface ASTNodeVisitor<out T> {
+    fun visit(node: Block): T
+    fun visit(node: Function): T
+    fun visit(node: Variable): T
+    fun visit(node: Expression): T
+    fun visit(node: While): T
+    fun visit(node: If): T
+    fun visit(node: Assignment): T
+    fun visit(node: Return): T
+    fun visit(node: Identifier): T
+    fun visit(node: ParameterNames): T
+    fun visit(node: FunctionCall): T
+    fun visit(node: BinaryExpression): T
+    fun visit(node: Literal): T
+    fun visit(node: Arguments): T
+    fun visit(node: ASTNode): T
 }
 
 interface ASTNode {
-    val children: List<ASTNode>
-    fun accept(visitor: ASTNodeVisitor)
+    fun accept(visitor: ASTNodeVisitor<*>)
 }
 
-class Block(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class Block(val children: List<ASTNode>) : ASTNode {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Statement(statement: ASTNode) : ASTNode {
-    override val children: List<ASTNode> = listOf(statement)
-    override fun accept(visitor: ASTNodeVisitor) {
+interface Statement : ASTNode {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Function(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class Function(val identifier: Identifier, val parameterNames: ParameterNames, val body: Block) : Statement {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Variable(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class Variable : Statement {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Expression(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+interface Expression : Statement
+
+class While : Statement {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class While(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class If : Statement {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class If(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class Assignment : Statement {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Assignment(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class Return : Statement {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Return(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class Identifier : Expression {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Identifier(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class ParameterNames : ASTNode {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class ParameterNames(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class FunctionCall : Expression {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class FunctionCall(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class BinaryExpression(leftArgument: Expression, rightArgument: Expression, val operation: Operation) : Expression {
+    enum class Operation(func: (Int, Int) -> Int) {
+        PLUS({ x, y -> x + y }),
+        MINUS({ x, y -> x - y }),
+        MUL({ x, y -> x * y }),
+        DIV({ x, y -> x / y }),
+        MOD({ x, y -> x / y }),
+        LE({ x, y -> if (x < y) 1 else 0 }),
+        GR({ x, y -> if (x > y) 1 else 0 }),
+        LEQ({ x, y -> if (x <= y) 1 else 0 }),
+        GEQ({ x, y -> if (x >= y) 1 else 0 }),
+        EQ({ x, y -> if (x == y) 1 else 0 }),
+        NEQ({ x, y -> if (x != y) 1 else 0 }),
+        AND({ x, y -> if (x != 0 && y != 0) 1 else 0 }),
+        OR({ x, y -> if (x != 0 || y != 0) 1 else 0 })
+    }
+
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class BinaryExpression(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class Literal(val value: Int) : Expression {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Literal(override val children: List<ASTNode> = emptyList()) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
-        visitor.visit(this)
-    }
-}
-
-class Arguments(override val children: List<ASTNode>) : ASTNode {
-    override fun accept(visitor: ASTNodeVisitor) {
+class Arguments(val arguments: List<Expression>) : ASTNode {
+    override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
