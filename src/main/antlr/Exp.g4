@@ -7,37 +7,40 @@ eval
 
 generalExp
     :     left=additionExp
-        | left=additionExp op=LE right=generalExp
-        | left=additionExp op=GR right=generalExp
-        | left=additionExp op=GEQ right=generalExp
-        | left=additionExp op=LEQ right=generalExp
-        | left=additionExp op=EQ right=generalExp
-        | left=additionExp op=NEQ right=generalExp
-        | left=additionExp op=AND right=generalExp
-        | left=additionExp op=OR right=generalExp
+        | left=additionExp (op=LE | op=GR | op=GEQ | op=LEQ | op=EQ | op=NEQ | op=AND | op=OR) right=generalExp
     ;
 
 additionExp
-    :      left=multiplyExp
-         | left=multiplyExp op=PLUS right=additionExp
-         | left=multiplyExp op=MINUS right=additionExp
+    :     exp=multiplyExp
+        | <assoc=left> left=additionExp (op=PLUS | op=MINUS) right=additionExp
     ;
 
 multiplyExp
-    :      left=atomExp
-         | left=atomExp op=MUL right=multiplyExp
-         | left=atomExp op=DIV right=multiplyExp
-         | left=atomExp op=MOD right=multiplyExp
+    :     exp=atomExp
+        | <assoc=left> left=multiplyExp (op=MUL | op=DIV | op=MOD) right=multiplyExp
     ;
 
 atomExp
-    :    value=Number
-    |    '(' exp=generalExp ')'
+    :     literal=Literal
+        | identifier=Identifier
+        | call=functionCall
+        | '(' exp=generalExp ')'
     ;
 
 
-Number
-    :    ('0'..'9')+ ('.' ('0'..'9')+)?
+// TODO
+functionCall
+    :
+        'function'
+    ;
+
+Identifier
+    :
+        ('a'..'z' | 'A'..'Z' | '_') ('a'..'z' | 'A'..'Z' | '_' | '0'..'9')*
+    ;
+
+Literal
+    :   ('1'..'9') ('0'..'9')*
     ;
 
 WHITESPACE : (' ' | '\t' | '\r'| '\n' | '//' .* '\n') -> skip;

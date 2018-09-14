@@ -16,7 +16,7 @@ class ASTTransformer : ExpBaseVisitor<Expression>() {
         val left = ctx.left?.accept(this)!!
         val right = ctx.right?.accept(this)!!
 
-        return when (ctx.op?.tokenIndex) {
+        return when (ctx.op?.type) {
             ExpParser.LE -> BinaryExpression(left, right, BinaryExpression.Operation.LE)
             ExpParser.GR -> BinaryExpression(left, right, BinaryExpression.Operation.GR)
             ExpParser.GEQ -> BinaryExpression(left, right, BinaryExpression.Operation.GEQ)
@@ -25,42 +25,58 @@ class ASTTransformer : ExpBaseVisitor<Expression>() {
             ExpParser.NEQ -> BinaryExpression(left, right, BinaryExpression.Operation.NEQ)
             ExpParser.AND -> BinaryExpression(left, right, BinaryExpression.Operation.AND)
             ExpParser.OR -> BinaryExpression(left, right, BinaryExpression.Operation.OR)
-            else -> throw NotImplementedError()
+            else -> throw IllegalStateException()
         }
     }
 
     override fun visitAdditionExp(ctx: ExpParser.AdditionExpContext?): Expression {
         if (ctx?.op == null) {
-            return ctx?.left?.accept(this)!!
+            return ctx?.exp?.accept(this)!!
         }
 
         val left = ctx.left?.accept(this)!!
         val right = ctx.right?.accept(this)!!
 
-        return when (ctx.op?.tokenIndex) {
+        return when (ctx.op?.type) {
             ExpParser.PLUS -> BinaryExpression(left, right, BinaryExpression.Operation.PLUS)
-            ExpParser.GR -> BinaryExpression(left, right, BinaryExpression.Operation.MINUS)
-            else -> throw NotImplementedError()
+            ExpParser.MINUS -> BinaryExpression(left, right, BinaryExpression.Operation.MINUS)
+            else -> throw IllegalStateException()
         }
     }
 
     override fun visitMultiplyExp(ctx: ExpParser.MultiplyExpContext?): Expression {
-        return Identifier()
+        if (ctx?.op == null) {
+            return ctx?.exp?.accept(this)!!
+        }
+
+        val left = ctx.left?.accept(this)!!
+        val right = ctx.right?.accept(this)!!
+
+        return when (ctx.op?.type) {
+            ExpParser.MUL -> BinaryExpression(left, right, BinaryExpression.Operation.MUL)
+            ExpParser.DIV -> BinaryExpression(left, right, BinaryExpression.Operation.DIV)
+            ExpParser.MOD -> BinaryExpression(left, right, BinaryExpression.Operation.MOD)
+            else -> throw IllegalStateException()
+        }
     }
 
     override fun visitAtomExp(ctx: ExpParser.AtomExpContext?): Expression {
-        return Identifier()
-    }
+        val identifier: String? = ctx?.identifier?.text
+        val literal: String? = ctx?.literal?.text
+        val exp = ctx?.exp
 
-    fun buildGeneralExpression(nodes: List<ExpParser.GeneralExpContext>): Expression {
-        val left = nodes[0]
-        while (nodes.size > 1) { // at least 3
-            val (_, op, right) = nodes
-            nodes.drop(3)
+        if (literal != null) {
+            return Literal(literal.toInt())
         }
-        // size is exactly 1
-        val arg = nodes[0]
-        throw NotImplementedError()
-    }
 
+        if (identifier != null) {
+            return Identifier(identifier)
+        }
+
+        if (exp != null) {
+            return exp.accept(this)
+        }
+
+        throw IllegalStateException()
+    }
 }

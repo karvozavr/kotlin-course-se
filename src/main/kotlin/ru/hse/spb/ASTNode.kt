@@ -72,7 +72,9 @@ class Return : Statement {
     }
 }
 
-class Identifier : Expression {
+class Identifier(val name: String) : Expression {
+    var value: Int = 0
+
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
@@ -90,7 +92,7 @@ class FunctionCall : Expression {
     }
 }
 
-class BinaryExpression(leftArgument: Expression, rightArgument: Expression, val operation: Operation) : Expression {
+class BinaryExpression(val leftArgument: Expression, val rightArgument: Expression, val operation: Operation) : Expression {
     enum class Operation(func: (Int, Int) -> Int) {
         PLUS({ x, y -> x + y }),
         MINUS({ x, y -> x - y }),
