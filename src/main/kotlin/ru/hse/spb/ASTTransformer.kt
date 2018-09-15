@@ -3,18 +3,72 @@ package ru.hse.spb
 import ru.hse.spb.parser.ExpBaseVisitor
 import ru.hse.spb.parser.ExpParser
 
-class ASTTransformer : ExpBaseVisitor<Expression>() {
-    override fun visitEval(ctx: ExpParser.EvalContext?): Expression {
-        return ctx?.exp?.accept(this)!!
+class ASTTransformer : ExpBaseVisitor<ASTNode>() {
+    override fun visitFile(ctx: ExpParser.FileContext?): ASTNode {
+        return ctx?.mainBlock?.accept(this)!!
     }
 
-    override fun visitGeneralExp(ctx: ExpParser.GeneralExpContext?): Expression {
+    override fun visitBlock(ctx: ExpParser.BlockContext?): ASTNode {
+        return Block(ctx?.children?.map { x -> x.accept(this) as Statement }!!)
+    }
+
+    override fun visitStatement(ctx: ExpParser.StatementContext?): ASTNode {
+        return ctx?.children!![0].accept(this)
+    }
+
+    override fun visitFunctionDefinition(ctx: ExpParser.FunctionDefinitionContext?): ASTNode {
+        val name: String = ctx?.name?.text!!
+        val params = ctx.params.accept(this) as ParameterNames
+        val body = ctx.body.accept(this) as Block
+
+        return Function(Identifier(name), params, body)
+    }
+
+    override fun visitVariableDeclaration(ctx: ExpParser.VariableDeclarationContext?): ASTNode {
+        return super.visitVariableDeclaration(ctx)
+    }
+
+    override fun visitParameterNames(ctx: ExpParser.ParameterNamesContext?): ASTNode {
+        return super.visitParameterNames(ctx)
+    }
+
+    override fun visitWhileLoop(ctx: ExpParser.WhileLoopContext?): ASTNode {
+        return super.visitWhileLoop(ctx)
+    }
+
+    override fun visitConditional(ctx: ExpParser.ConditionalContext?): ASTNode {
+        return super.visitConditional(ctx)
+    }
+
+    override fun visitAssignment(ctx: ExpParser.AssignmentContext?): ASTNode {
+        val identifier: String = ctx?.identifier?.text!!
+        val value: ASTNode = ctx.value.accept(this)
+        return Assignment(Identifier(identifier), value)
+    }
+
+    override fun visitReturnStatement(ctx: ExpParser.ReturnStatementContext?): ASTNode {
+        return super.visitReturnStatement(ctx)
+    }
+
+    override fun visitExpression(ctx: ExpParser.ExpressionContext?): ASTNode {
+        return super.visitExpression(ctx)
+    }
+
+    override fun visitFunctionCall(ctx: ExpParser.FunctionCallContext?): ASTNode {
+        return super.visitFunctionCall(ctx)
+    }
+
+    override fun visitArguments(ctx: ExpParser.ArgumentsContext?): ASTNode {
+        return super.visitArguments(ctx)
+    }
+
+    override fun visitGeneralExp(ctx: ExpParser.GeneralExpContext?): ASTNode {
         if (ctx?.op == null) {
             return ctx?.left?.accept(this)!!
         }
 
-        val left = ctx.left?.accept(this)!!
-        val right = ctx.right?.accept(this)!!
+        val left = ctx.left?.accept(this)!! as Expression
+        val right = ctx.right?.accept(this)!! as Expression
 
         return when (ctx.op?.type) {
             ExpParser.LE -> BinaryExpression(left, right, BinaryExpression.Operation.LE)
@@ -29,13 +83,13 @@ class ASTTransformer : ExpBaseVisitor<Expression>() {
         }
     }
 
-    override fun visitAdditionExp(ctx: ExpParser.AdditionExpContext?): Expression {
+    override fun visitAdditionExp(ctx: ExpParser.AdditionExpContext?): ASTNode {
         if (ctx?.op == null) {
             return ctx?.exp?.accept(this)!!
         }
 
-        val left = ctx.left?.accept(this)!!
-        val right = ctx.right?.accept(this)!!
+        val left = ctx.left?.accept(this)!! as Expression
+        val right = ctx.right?.accept(this)!! as Expression
 
         return when (ctx.op?.type) {
             ExpParser.PLUS -> BinaryExpression(left, right, BinaryExpression.Operation.PLUS)
@@ -44,13 +98,13 @@ class ASTTransformer : ExpBaseVisitor<Expression>() {
         }
     }
 
-    override fun visitMultiplyExp(ctx: ExpParser.MultiplyExpContext?): Expression {
+    override fun visitMultiplyExp(ctx: ExpParser.MultiplyExpContext?): ASTNode {
         if (ctx?.op == null) {
             return ctx?.exp?.accept(this)!!
         }
 
-        val left = ctx.left?.accept(this)!!
-        val right = ctx.right?.accept(this)!!
+        val left = ctx.left?.accept(this)!! as Expression
+        val right = ctx.right?.accept(this)!! as Expression
 
         return when (ctx.op?.type) {
             ExpParser.MUL -> BinaryExpression(left, right, BinaryExpression.Operation.MUL)
@@ -60,7 +114,7 @@ class ASTTransformer : ExpBaseVisitor<Expression>() {
         }
     }
 
-    override fun visitAtomExp(ctx: ExpParser.AtomExpContext?): Expression {
+    override fun visitAtomExp(ctx: ExpParser.AtomExpContext?): ASTNode {
         val identifier: String? = ctx?.identifier?.text
         val literal: String? = ctx?.literal?.text
         val exp = ctx?.exp

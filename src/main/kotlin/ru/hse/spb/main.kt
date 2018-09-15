@@ -16,5 +16,5 @@ fun getGreeting(): String {
 
 fun main(args: Array<String>) {
     val expLexer = ExpLexer(CharStreams.fromString("(8 / 4 / 2)"))
-    println(ExpParser(BufferedTokenStream(expLexer)).eval())
+    //println(ExpParser(BufferedTokenStream(expLexer)).eval())
 }

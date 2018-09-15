@@ -3,7 +3,7 @@ package ru.hse.spb
 interface ASTNodeVisitor<out T> {
     fun visit(node: Block): T
     fun visit(node: Function): T
-    fun visit(node: Variable): T
+    fun visit(node: VariableDeclaration): T
     fun visit(node: Expression): T
     fun visit(node: While): T
     fun visit(node: If): T
@@ -22,7 +22,7 @@ interface ASTNode {
     fun accept(visitor: ASTNodeVisitor<*>)
 }
 
-class Block(val children: List<ASTNode>) : ASTNode {
+class Block(val statements: List<Statement>) : ASTNode {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
@@ -40,7 +40,7 @@ class Function(val identifier: Identifier, val parameterNames: ParameterNames, v
     }
 }
 
-class Variable : Statement {
+class VariableDeclaration(val name: String, val value: Expression?) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
@@ -60,7 +60,7 @@ class If : Statement {
     }
 }
 
-class Assignment : Statement {
+class Assignment(val identifier: Identifier, val value: ASTNode) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }

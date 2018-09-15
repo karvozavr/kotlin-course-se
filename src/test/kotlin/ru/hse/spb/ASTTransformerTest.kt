@@ -8,10 +8,10 @@ class ASTTransformerTest {
     @Test
     fun testASTTransformation() {
         val transformer = ASTTransformer()
-        val expr = "2 + 3 (7 * 3 + 10 / 5 / 2 - 2) - 3 + (1 - 2 - 562626)"
+        val expr = "1       aa"
         val parser = Parser(expr)
-        val ast = parser.buildAST()
-        val ast2 = ast.accept(transformer)
-        println(ast2)
+        val ast = parser.ast
+        println(ast)
     }
 }
+
