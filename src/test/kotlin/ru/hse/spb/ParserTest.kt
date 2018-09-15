@@ -35,4 +35,36 @@ class ParserTest {
         val ast = parser.ast
         assertEquals(Block::class, ast::class)
     }
+
+    @Test
+    fun testParserVar() {
+        val expr = "var a var a = 24"
+        val parser = Parser(expr)
+        val ast = parser.ast
+        assertEquals(Block::class, ast::class)
+    }
+
+    @Test
+    fun testParserFunction() {
+        val expr = "fun foo(a, b, c, d) {  }"
+        val parser = Parser(expr)
+        val ast = parser.ast
+        assertEquals(Block::class, ast::class)
+    }
+
+    @Test
+    fun testParserWhile() {
+        val expr = "while (a == b) { println(c) }"
+        val parser = Parser(expr)
+        val ast = parser.ast
+        assertEquals(Block::class, ast::class)
+    }
+
+    @Test
+    fun testParserComments() {
+        val expr = "//comment \n while (a == b) // some comment\n  { println(c) }"
+        val parser = Parser(expr)
+        val ast = parser.ast
+        assertEquals(Block::class, ast::class)
+    }
 }

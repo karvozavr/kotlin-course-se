@@ -6,7 +6,7 @@ file
     ;
 
 block
-    :   (statements=statement)*
+    :   (statement)*
     ;
 
 statement
@@ -28,7 +28,7 @@ variableDeclaration
     ;
 
 parameterNames
-    :    params=Identifier (',' params=Identifier)*
+    :    (Identifier (',' Identifier)*)?
     ;
 
 whileLoop

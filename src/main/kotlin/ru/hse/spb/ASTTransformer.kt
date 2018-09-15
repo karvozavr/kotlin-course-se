@@ -9,7 +9,7 @@ class ASTTransformer : ExpBaseVisitor<ASTNode>() {
     }
 
     override fun visitBlock(ctx: ExpParser.BlockContext?): ASTNode {
-        return Block(ctx?.children?.map { x -> x.accept(this) as Statement }!!)
+        return Block(ctx?.children?.map { x -> x.accept(this) as Statement } ?: emptyList())
     }
 
     override fun visitStatement(ctx: ExpParser.StatementContext?): ASTNode {
@@ -25,29 +25,42 @@ class ASTTransformer : ExpBaseVisitor<ASTNode>() {
     }
 
     override fun visitVariableDeclaration(ctx: ExpParser.VariableDeclarationContext?): ASTNode {
-        return super.visitVariableDeclaration(ctx)
+        val name: String = ctx?.name?.text!!
+        val value = ctx.value?.accept(this) as Expression?
+        return VariableDeclaration(name, value ?: Literal(0))
     }
 
     override fun visitParameterNames(ctx: ExpParser.ParameterNamesContext?): ASTNode {
-        return super.visitParameterNames(ctx)
+        val params: List<Identifier> = ctx?.children?.asSequence()
+                ?.filter { x -> x != null }
+                ?.filter { x -> x.text != "," }
+                ?.map { x -> Identifier(x.text) }
+                ?.toList()!!
+        return ParameterNames(params)
     }
 
     override fun visitWhileLoop(ctx: ExpParser.WhileLoopContext?): ASTNode {
-        return super.visitWhileLoop(ctx)
+        val condition = ctx?.cond?.accept(this) as Expression
+        val body = ctx.body.accept(this) as Block
+        return While(condition, body)
     }
 
     override fun visitConditional(ctx: ExpParser.ConditionalContext?): ASTNode {
-        return super.visitConditional(ctx)
+        val condition = ctx?.cond?.accept(this) as Expression
+        val ifTrue = ctx.ifTrue.accept(this) as Block
+        val ifFalse = ctx.ifFalse?.accept(this) as Block?
+        return If(condition, ifTrue, ifFalse ?: Block(emptyList()))
     }
 
     override fun visitAssignment(ctx: ExpParser.AssignmentContext?): ASTNode {
         val identifier: String = ctx?.identifier?.text!!
-        val value: ASTNode = ctx.value.accept(this)
+        val value = ctx.value.accept(this) as Expression
         return Assignment(Identifier(identifier), value)
     }
 
     override fun visitReturnStatement(ctx: ExpParser.ReturnStatementContext?): ASTNode {
-        return super.visitReturnStatement(ctx)
+        val value = ctx?.value?.accept(this) as Expression
+        return Return(value)
     }
 
     override fun visitExpression(ctx: ExpParser.ExpressionContext?): ASTNode {

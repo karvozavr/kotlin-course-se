@@ -1,5 +1,7 @@
 package ru.hse.spb
 
+import java.util.concurrent.locks.Condition
+
 interface ASTNodeVisitor<out T> {
     fun visit(node: Block): T
     fun visit(node: Function): T
@@ -40,7 +42,7 @@ class Function(val identifier: Identifier, val parameterNames: ParameterNames, v
     }
 }
 
-class VariableDeclaration(val name: String, val value: Expression?) : Statement {
+class VariableDeclaration(val name: String, val value: Expression) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
@@ -48,25 +50,25 @@ class VariableDeclaration(val name: String, val value: Expression?) : Statement 
 
 interface Expression : Statement
 
-class While : Statement {
+class While(val condition: Expression, val body: Block) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class If : Statement {
+class If(val condition: Expression, val ifTrue: Block, val ifFalse: Block) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Assignment(val identifier: Identifier, val value: ASTNode) : Statement {
+class Assignment(val identifier: Identifier, val value: Expression) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Return : Statement {
+class Return(val value: Expression) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
@@ -80,7 +82,7 @@ class Identifier(val name: String) : Expression {
     }
 }
 
-class ParameterNames : ASTNode {
+class ParameterNames(val params: List<Identifier>) : ASTNode {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
