@@ -48,15 +48,11 @@ returnStatement
     ;
 
 expression
-    :     generalExp
-        | functionCall
-        | Identifier
-        | Literal
-        | '(' expression ')'
+    :     exp=generalExp
     ;
 
 functionCall
-    :     Identifier '(' arguments ')'
+    :     name=Identifier '(' args=arguments ')'
     ;
 
 arguments
@@ -79,9 +75,9 @@ multiplyExp
     ;
 
 atomExp
-    :     literal=Literal
+    :     call=functionCall
         | identifier=Identifier
-        | call=functionCall
+        | literal=Literal
         | '(' exp=generalExp ')'
     ;
 
@@ -91,7 +87,7 @@ Identifier
     ;
 
 Literal
-    :   ('1'..'9') ('0'..'9')*
+    :   ('1'..'9') ('0'..'9')* | '0'
     ;
 
 WHITESPACE : (' ' | '\t' | '\r'| '\n' | '//' (.)*? '\n') -> skip;

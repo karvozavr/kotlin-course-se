@@ -24,7 +24,7 @@ interface ASTNode {
     fun accept(visitor: ASTNodeVisitor<*>)
 }
 
-class Block(val statements: List<Statement>) : ASTNode {
+data class Block(val statements: List<Statement>) : ASTNode {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
@@ -36,13 +36,13 @@ interface Statement : ASTNode {
     }
 }
 
-class Function(val identifier: Identifier, val parameterNames: ParameterNames, val body: Block) : Statement {
+data class Function(val identifier: Identifier, val parameterNames: ParameterNames, val body: Block) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class VariableDeclaration(val name: String, val value: Expression) : Statement {
+data class VariableDeclaration(val name: Identifier, val value: Expression) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
@@ -50,31 +50,31 @@ class VariableDeclaration(val name: String, val value: Expression) : Statement {
 
 interface Expression : Statement
 
-class While(val condition: Expression, val body: Block) : Statement {
+data class While(val condition: Expression, val body: Block) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class If(val condition: Expression, val ifTrue: Block, val ifFalse: Block) : Statement {
+data class If(val condition: Expression, val ifTrue: Block, val ifFalse: Block = Block(emptyList())) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Assignment(val identifier: Identifier, val value: Expression) : Statement {
+data class Assignment(val identifier: Identifier, val value: Expression) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Return(val value: Expression) : Statement {
+data class Return(val value: Expression) : Statement {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Identifier(val name: String) : Expression {
+data class Identifier(val name: String) : Expression {
     var value: Int = 0
 
     override fun accept(visitor: ASTNodeVisitor<*>) {
@@ -82,19 +82,19 @@ class Identifier(val name: String) : Expression {
     }
 }
 
-class ParameterNames(val params: List<Identifier>) : ASTNode {
+data class ParameterNames(val params: List<Identifier> = emptyList()) : ASTNode {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class FunctionCall : Expression {
+data class FunctionCall(val name: Identifier, val args: Arguments) : Expression {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class BinaryExpression(val leftArgument: Expression, val rightArgument: Expression, val operation: Operation) : Expression {
+data class BinaryExpression(val leftArgument: Expression, val rightArgument: Expression, val operation: Operation) : Expression {
     enum class Operation(func: (Int, Int) -> Int) {
         PLUS({ x, y -> x + y }),
         MINUS({ x, y -> x - y }),
@@ -116,13 +116,13 @@ class BinaryExpression(val leftArgument: Expression, val rightArgument: Expressi
     }
 }
 
-class Literal(val value: Int) : Expression {
+data class Literal(val value: Int) : Expression {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }
 }
 
-class Arguments(val arguments: List<Expression>) : ASTNode {
+data class Arguments(val arguments: List<Expression>) : ASTNode {
     override fun accept(visitor: ASTNodeVisitor<*>) {
         visitor.visit(this)
     }

@@ -27,15 +27,16 @@ class ASTTransformer : ExpBaseVisitor<ASTNode>() {
     override fun visitVariableDeclaration(ctx: ExpParser.VariableDeclarationContext?): ASTNode {
         val name: String = ctx?.name?.text!!
         val value = ctx.value?.accept(this) as Expression?
-        return VariableDeclaration(name, value ?: Literal(0))
+        return VariableDeclaration(Identifier(name), value ?: Literal(0))
     }
 
     override fun visitParameterNames(ctx: ExpParser.ParameterNamesContext?): ASTNode {
-        val params: List<Identifier> = ctx?.children?.asSequence()
-                ?.filter { x -> x != null }
-                ?.filter { x -> x.text != "," }
-                ?.map { x -> Identifier(x.text) }
-                ?.toList()!!
+        val children = ctx?.children ?: emptyList()
+        val params: List<Identifier> = children.asSequence()
+                .filter { x -> x != null }
+                .filter { x -> x.text != "," }
+                .map { x -> Identifier(x.text) }
+                .toList()
         return ParameterNames(params)
     }
 
@@ -64,15 +65,23 @@ class ASTTransformer : ExpBaseVisitor<ASTNode>() {
     }
 
     override fun visitExpression(ctx: ExpParser.ExpressionContext?): ASTNode {
-        return super.visitExpression(ctx)
+        return ctx?.exp?.accept(this)!!
     }
 
     override fun visitFunctionCall(ctx: ExpParser.FunctionCallContext?): ASTNode {
-        return super.visitFunctionCall(ctx)
+        val name: String = ctx?.name?.text!!
+        val args = ctx.args?.accept(this) as Arguments
+        return FunctionCall(Identifier(name), args)
     }
 
     override fun visitArguments(ctx: ExpParser.ArgumentsContext?): ASTNode {
-        return super.visitArguments(ctx)
+        val children = ctx?.children ?: emptyList()
+        val args: List<Expression> = children.asSequence()
+                .filter { x -> x != null }
+                .filter { x -> x.text != "," }
+                .map { x -> x.accept(this) as Expression }
+                .toList()
+        return Arguments(args)
     }
 
     override fun visitGeneralExp(ctx: ExpParser.GeneralExpContext?): ASTNode {
@@ -130,7 +139,12 @@ class ASTTransformer : ExpBaseVisitor<ASTNode>() {
     override fun visitAtomExp(ctx: ExpParser.AtomExpContext?): ASTNode {
         val identifier: String? = ctx?.identifier?.text
         val literal: String? = ctx?.literal?.text
+        val call: ExpParser.FunctionCallContext? = ctx?.call
         val exp = ctx?.exp
+
+        if (call != null) {
+            return call.accept(this)
+        }
 
         if (literal != null) {
             return Literal(literal.toInt())
