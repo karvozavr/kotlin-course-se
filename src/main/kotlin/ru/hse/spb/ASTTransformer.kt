@@ -3,6 +3,9 @@ package ru.hse.spb
 import ru.hse.spb.parser.ExpBaseVisitor
 import ru.hse.spb.parser.ExpParser
 
+/**
+ * Visitor-based implementation of traverse of Antlr AST that builds AST for interpreter.
+ */
 class ASTTransformer : ExpBaseVisitor<ASTNode>() {
     override fun visitFile(ctx: ExpParser.FileContext): ASTNode {
         return ctx.mainBlock.accept(this)
@@ -12,9 +15,9 @@ class ASTTransformer : ExpBaseVisitor<ASTNode>() {
         return Block(ctx.children?.map { x -> x.accept(this) as Statement } ?: emptyList())
     }
 
-        override fun visitStatement(ctx: ExpParser.StatementContext): ASTNode {
-            return ctx.children[0].accept(this)
-        }
+    override fun visitStatement(ctx: ExpParser.StatementContext): ASTNode {
+        return ctx.children[0].accept(this)
+    }
 
     override fun visitFunctionDefinition(ctx: ExpParser.FunctionDefinitionContext): ASTNode {
         val name: String = ctx.name.text

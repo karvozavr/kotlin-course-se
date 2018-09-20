@@ -21,7 +21,9 @@ fun runInterpreter(ast: Block, std: Library =
     EvaluationContext(standardScope).eval(ast)
 }
 
-
+/**
+ * Evaluates AST in a context of given scope.
+ */
 class EvaluationContext(private val scope: Scope) {
 
     fun eval(block: Block): Int? {
@@ -52,18 +54,14 @@ class EvaluationContext(private val scope: Scope) {
 
             is While ->
                 while (eval(statement.condition) != 0) {
-                    val result = EvaluationContext(scope).eval(statement.body)
+                    val result = EvaluationContext(Scope(scope)).eval(statement.body)
                     if (result != null) {
                         return result
                     }
                 }
 
             is If ->
-                return if (eval(statement.condition) != 0) {
-                    EvaluationContext(scope).eval(statement.ifTrue)
-                } else {
-                    EvaluationContext(scope).eval(statement.ifFalse)
-                }
+                return EvaluationContext(Scope(scope)).eval(if (eval(statement.condition) != 0) statement.ifTrue else statement.ifFalse)
 
             is Assignment ->
                 scope.variables[statement.identifier.name].value = eval(statement.value)
@@ -110,7 +108,7 @@ private fun Function.call(arguments: List<Int>, closureScope: Scope): Int {
 }
 
 /**
- * Interpreter scope mapping symbols -> values
+ * Interpreter scope mapping symbols -> values & checking for runtime correctness
  */
 class Scope(val functions: ScopeDict<InterpreterCallable>, val variables: ScopeDict<InterpreterVariable>) {
 

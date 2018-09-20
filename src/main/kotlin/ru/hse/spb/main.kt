@@ -1,26 +1,25 @@
 package ru.hse.spb
 
-fun getGreeting(): String {
-    val words = mutableListOf<String>()
-    words.add("Hello,")
-
-    words.add("world!")
-
-    return words.joinToString(separator = " ")
-}
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.util.stream.Collectors
 
 fun main(args: Array<String>) {
-    val expr = """
-            fun foo(n) {
-                fun bar(m) {
-                    return m + n
-                }
+    if (args.isEmpty()) {
+        println("Not enough arguments, please, provide a filename.")
+    }
 
-                return bar(1)
-            }
+    val fileName = args[0]
+    val file = Paths.get(fileName)
+    val sourceCode: String = Files.lines(file).collect(Collectors.joining())
+    val parser = Parser(sourceCode)
 
-            println(foo(41)) // prints 42
-        """
-    val ast = Parser(expr).ast
-    runInterpreter(ast)
+    try {
+        val ast = parser.ast
+        runInterpreter(ast)
+    } catch (e: ParserError) {
+        println("Parser error: \n" + e.message)
+    } catch (e: InterpreterError) {
+        println("Interpreter runtime error: \n" + e.message)
+    }
 }

@@ -32,7 +32,7 @@ data class BinaryExpression(val leftArgument: Expression, val rightArgument: Exp
         MINUS({ x, y -> x - y }),
         MUL({ x, y -> x * y }),
         DIV({ x, y -> x / y }),
-        MOD({ x, y -> x / y }),
+        MOD({ x, y -> x % y }),
         LE({ x, y -> if (x < y) 1 else 0 }),
         GR({ x, y -> if (x > y) 1 else 0 }),
         LEQ({ x, y -> if (x <= y) 1 else 0 }),

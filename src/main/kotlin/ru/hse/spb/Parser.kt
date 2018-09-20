@@ -6,6 +6,10 @@ import ru.hse.spb.parser.ExpParser
 
 class ParserError(override var message: String) : Exception(message)
 
+/**
+ * Parser
+ * source code -> interpreter AST
+ */
 class Parser(sourceCode: String) {
     private val lexer = ExpLexer(CharStreams.fromString(sourceCode))
     private val parser = ExpParser(BufferedTokenStream(lexer))

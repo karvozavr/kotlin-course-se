@@ -8,15 +8,13 @@ class ParserTest {
     @Test(expected = ParserError::class)
     fun testParserError1() {
         val expr = "a = 2 - "
-        val parser = Parser(expr)
-        val ast = parser.ast
+        Parser(expr).ast
     }
 
     @Test(expected = ParserError::class)
     fun testParserError2() {
         val expr = "++"
-        val parser = Parser(expr)
-        val ast = parser.ast
+        Parser(expr).ast
     }
 
     @Test
