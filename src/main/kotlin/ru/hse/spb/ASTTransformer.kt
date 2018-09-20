@@ -64,10 +64,6 @@ class ASTTransformer : ExpBaseVisitor<ASTNode>() {
         return Return(value)
     }
 
-    override fun visitExpression(ctx: ExpParser.ExpressionContext): ASTNode {
-        return ctx.exp.accept(this)
-    }
-
     override fun visitFunctionCall(ctx: ExpParser.FunctionCallContext): ASTNode {
         val name: String = ctx.name.text
         val args = ctx.args.accept(this) as Arguments
@@ -84,59 +80,8 @@ class ASTTransformer : ExpBaseVisitor<ASTNode>() {
         return Arguments(args)
     }
 
-    override fun visitGeneralExp(ctx: ExpParser.GeneralExpContext): ASTNode {
-        if (ctx.op == null) {
-            return ctx.left.accept(this)
-        }
 
-        val left = ctx.left.accept(this) as Expression
-        val right = ctx.right.accept(this) as Expression
-
-        return when (ctx.op.type) {
-            ExpParser.LE -> BinaryExpression(left, right, BinaryExpression.Operation.LE)
-            ExpParser.GR -> BinaryExpression(left, right, BinaryExpression.Operation.GR)
-            ExpParser.GEQ -> BinaryExpression(left, right, BinaryExpression.Operation.GEQ)
-            ExpParser.LEQ -> BinaryExpression(left, right, BinaryExpression.Operation.LEQ)
-            ExpParser.EQ -> BinaryExpression(left, right, BinaryExpression.Operation.EQ)
-            ExpParser.NEQ -> BinaryExpression(left, right, BinaryExpression.Operation.NEQ)
-            ExpParser.AND -> BinaryExpression(left, right, BinaryExpression.Operation.AND)
-            ExpParser.OR -> BinaryExpression(left, right, BinaryExpression.Operation.OR)
-            else -> throw IllegalStateException()
-        }
-    }
-
-    override fun visitAdditionExp(ctx: ExpParser.AdditionExpContext): ASTNode {
-        if (ctx.op == null) {
-            return ctx.exp.accept(this)!!
-        }
-
-        val left = ctx.left.accept(this)!! as Expression
-        val right = ctx.right.accept(this)!! as Expression
-
-        return when (ctx.op.type) {
-            ExpParser.PLUS -> BinaryExpression(left, right, BinaryExpression.Operation.PLUS)
-            ExpParser.MINUS -> BinaryExpression(left, right, BinaryExpression.Operation.MINUS)
-            else -> throw IllegalStateException()
-        }
-    }
-
-    override fun visitMultiplyExp(ctx: ExpParser.MultiplyExpContext): ASTNode {
-        if (ctx.op == null) {
-            return ctx.exp.accept(this)!!
-        }
-
-        val left = ctx.left.accept(this)!! as Expression
-        val right = ctx.right.accept(this)!! as Expression
-
-        return when (ctx.op.type) {
-            ExpParser.MUL -> BinaryExpression(left, right, BinaryExpression.Operation.MUL)
-            ExpParser.DIV -> BinaryExpression(left, right, BinaryExpression.Operation.DIV)
-            ExpParser.MOD -> BinaryExpression(left, right, BinaryExpression.Operation.MOD)
-            else -> throw IllegalStateException()
-        }
-    }
-
-    override fun visitAtomExp(ctx: ExpParser.AtomExpContext): ASTNode {
+    override fun visitExpression(ctx: ExpParser.ExpressionContext): ASTNode {
         val identifier: String? = ctx.identifier?.text
         val literal: String? = ctx.literal?.text
         val call: ExpParser.FunctionCallContext? = ctx.call
@@ -158,6 +103,28 @@ class ASTTransformer : ExpBaseVisitor<ASTNode>() {
             return exp.accept(this)
         }
 
-        throw IllegalStateException()
+        if (ctx.op == null) {
+            return ctx.left.accept(this)
+        }
+
+        val left = ctx.left.accept(this) as Expression
+        val right = ctx.right.accept(this) as Expression
+
+        return when (ctx.op.type) {
+            ExpParser.PLUS -> BinaryExpression(left, right, BinaryExpression.Operation.PLUS)
+            ExpParser.MUL -> BinaryExpression(left, right, BinaryExpression.Operation.MUL)
+            ExpParser.DIV -> BinaryExpression(left, right, BinaryExpression.Operation.DIV)
+            ExpParser.MOD -> BinaryExpression(left, right, BinaryExpression.Operation.MOD)
+            ExpParser.MINUS -> BinaryExpression(left, right, BinaryExpression.Operation.MINUS)
+            ExpParser.LE -> BinaryExpression(left, right, BinaryExpression.Operation.LE)
+            ExpParser.GR -> BinaryExpression(left, right, BinaryExpression.Operation.GR)
+            ExpParser.GEQ -> BinaryExpression(left, right, BinaryExpression.Operation.GEQ)
+            ExpParser.LEQ -> BinaryExpression(left, right, BinaryExpression.Operation.LEQ)
+            ExpParser.EQ -> BinaryExpression(left, right, BinaryExpression.Operation.EQ)
+            ExpParser.NEQ -> BinaryExpression(left, right, BinaryExpression.Operation.NEQ)
+            ExpParser.AND -> BinaryExpression(left, right, BinaryExpression.Operation.AND)
+            ExpParser.OR -> BinaryExpression(left, right, BinaryExpression.Operation.OR)
+            else -> throw IllegalStateException()
+        }
     }
 }

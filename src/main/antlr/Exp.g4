@@ -12,11 +12,11 @@ block
 statement
     :     functionDefinition
         | variableDeclaration
-        | expression
         | whileLoop
         | conditional
         | assignment
         | returnStatement
+        | expression
     ;
 
 functionDefinition
@@ -47,10 +47,6 @@ returnStatement
     :    'return' value=expression
     ;
 
-expression
-    :     exp=generalExp
-    ;
-
 functionCall
     :     name=Identifier '(' args=arguments ')'
     ;
@@ -59,26 +55,17 @@ arguments
     :     args=expression (',' args=expression)*
     ;
 
-generalExp
-    :     left=additionExp
-        | left=additionExp (op=LE | op=GR | op=GEQ | op=LEQ | op=EQ | op=NEQ | op=AND | op=OR) right=generalExp
-    ;
-
-additionExp
-    :     exp=multiplyExp
-        | <assoc=left> left=additionExp (op=PLUS | op=MINUS) right=additionExp
-    ;
-
-multiplyExp
-    :     exp=atomExp
-        | <assoc=left> left=multiplyExp (op=MUL | op=DIV | op=MOD) right=multiplyExp
-    ;
-
-atomExp
+expression
     :     call=functionCall
         | identifier=Identifier
         | literal=Literal
-        | '(' exp=generalExp ')'
+        | '(' exp=expression ')'
+        | <assoc=left> left=expression (op=MUL | op=DIV | op=MOD) right=expression
+        | <assoc=left> left=expression (op=PLUS | op=MINUS) right=expression
+        | left=expression (op=LE | op=GR | op=GEQ | op=LEQ) right=expression
+        | left=expression ( op=EQ | op=NEQ) right=expression
+        | left=expression op=AND right=expression
+        | left=expression op=OR right=expression
     ;
 
 Identifier
@@ -87,7 +74,7 @@ Identifier
     ;
 
 Literal
-    :   ('1'..'9') ('0'..'9')* | '0'
+    :   '-'? ('1'..'9') ('0'..'9')* | '0'
     ;
 
 WHITESPACE : (' ' | '\t' | '\r'| '\n' | '//' (.)*? '\n') -> skip;

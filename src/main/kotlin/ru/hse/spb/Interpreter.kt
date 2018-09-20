@@ -1,165 +1,134 @@
 package ru.hse.spb
 
-class Interpreter {
+typealias InterpreterCallable = (List<Int>) -> Int
 
-    private val scope: Scope = Scope()
-    private val returnValue: ReturnValue = ReturnValue()
+data class InterpreterVariable(var value: Int)
 
-    fun runInterpreter(program: Block) {
-        visit(program)
-    }
+typealias Library = MutableMap<String, InterpreterCallable>
 
-    fun visit(node: Block) {
-        scope.openScope()
-        for (statement in node.statements) {
-            visit(statement)
+class InterpreterError(message: String) : Exception(message)
+
+/**
+ * Interpreter evaluates given AST with context of given standard functions.
+ */
+fun runInterpreter(ast: Block, std: Library =
+        mutableMapOf("println" to { args -> println(args.asSequence().joinToString(" ")); 0 })) {
+    val standardScope = Scope(
+            Scope.ScopeDict(std, mutableSetOf()),
+            Scope.ScopeDict(mutableMapOf(), mutableSetOf())
+    )
+
+    EvaluationContext(standardScope).eval(ast)
+}
+
+
+class EvaluationContext(private val scope: Scope) {
+
+    fun eval(block: Block): Int? {
+        for (statement in block.statements) {
+            val result = eval(statement)
+            if (result != null) {
+                return result
+            }
         }
-        scope.closeScope()
+        return null
     }
 
-    fun visit(node: Statement) {
-        return when (node) {
-            is Function -> visit(node)
-            is VariableDeclaration -> visit(node)
-            is While -> visit(node)
-            is If -> visit(node)
-            is Assignment -> visit(node)
-            is Return -> visit(node)
-            else -> throw IllegalStateException()
-        }
-    }
+    private fun eval(statement: Statement): Int? {
+        when (statement) {
+            is Function -> {
+                val name = statement.identifier.name
+                val closureScope = Scope(scope)
+                val function: InterpreterCallable = { args: List<Int> -> statement.call(args, scope) }
+                scope.functions.add(name, function)
+                closureScope.functions.add(name, function)
+            }
 
-    fun visit(node: Function) {
-        scope.declareFunction(node)
-    }
+            is VariableDeclaration ->
+                scope.variables.add(statement.identifier.name, InterpreterVariable(eval(statement.value)))
 
-    fun visit(node: VariableDeclaration) {
-        scope.declareVariable(node.name.name, visit(node.value))
-    }
+            is Expression ->
+                eval(statement)
 
-    fun visit(node: While) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    fun visit(node: If) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    fun visit(node: Assignment) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    fun visit(node: Return) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    fun visit(node: Expression): Int {
-        return when (node) {
-            is Identifier -> visit(node)
-            is FunctionCall -> visit(node)
-            is BinaryExpression -> visit(node)
-            is Literal -> visit(node)
-            else -> throw IllegalStateException()
-        }
-    }
-
-    fun visit(node: Identifier): Int {
-        return scope.lookupVariable(node.name)
-                ?: throw InterpreterError("Unknown variable name \"${node.name}\".")
-    }
-
-    fun visit(node: FunctionCall): Int {
-        val function: Function = scope.lookupFunction(node.name.name)
-                ?: throw InterpreterError("Unknown variable name \"${node.name}\".")
-        scope.openScope()
-        for ((argument, name) in node.args.arguments.zip(function.parameterNames.params.map { p -> p.name })) {
-            scope.declareVariable(name, visit(argument))
-        }
-        visit(function.body)
-        scope.closeScope()
-        TODO() // Break runtime on return
-        return returnValue.get()
-    }
-
-    fun visit(node: BinaryExpression): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    fun visit(node: Literal): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    class InterpreterError(message: String) : Exception(message)
-
-    private class ReturnValue {
-        private var value: Int = 0
-
-        fun get(): Int {
-            val result = value
-            value = 0
-            return result
-        }
-
-        fun set(newValue: Int) {
-            value = newValue
-        }
-    }
-
-    private class Scope {
-        private val variables = ArrayList<HashMap<String, Int>>()
-        private val functions = ArrayList<HashMap<String, Function>>()
-
-        fun openScope() {
-            variables.add(HashMap())
-            functions.add(HashMap())
-        }
-
-        fun closeScope() {
-            variables.dropLast(1)
-            functions.dropLast(1)
-        }
-
-        fun lookupVariable(symbol: String): Int? {
-            for (scope in variables.asReversed()) {
-                if (symbol in scope) {
-                    return scope[symbol]
+            is While ->
+                while (eval(statement.condition) != 0) {
+                    val result = EvaluationContext(scope).eval(statement.body)
+                    if (result != null) {
+                        return result
+                    }
                 }
-            }
-            return null
-        }
 
-        fun lookupFunction(symbol: String): Function? {
-            for (scope in functions.asReversed()) {
-                if (symbol in scope) {
-                    return scope[symbol]
+            is If ->
+                return if (eval(statement.condition) != 0) {
+                    EvaluationContext(scope).eval(statement.ifTrue)
+                } else {
+                    EvaluationContext(scope).eval(statement.ifFalse)
                 }
-            }
-            return null
+
+            is Assignment ->
+                scope.variables[statement.identifier.name].value = eval(statement.value)
+
+            is Return ->
+                return eval(statement.value)
         }
 
-        fun declareFunction(function: Function) {
-            val symbol = function.name.name
-            if (symbol in functions.last()) {
-                throw InterpreterError("Function \"$symbol\" already declared in current scope.")
-            }
-            functions.last()["ss"] = function
-        }
+        return null
+    }
 
-        fun declareVariable(symbol: String, value: Int) {
-            if (symbol in variables.last()) {
-                throw InterpreterError("Variable \"$symbol\" already declared in current scope.")
-            }
-            variables.last()["ss"] = value
-        }
+    private fun eval(expression: Expression): Int {
+        return when (expression) {
+            is FunctionCall ->
+                scope.functions[expression.identifier.name](expression.args.arguments.map(this::eval))
 
-        fun updateVariable(symbol: String, value: Int) {
-            for (scope in variables.asReversed()) {
-                if (symbol in scope) {
-                    scope[symbol] = value
-                    return
-                }
+            is BinaryExpression ->
+                expression.operation(eval(expression.leftArgument), eval(expression.rightArgument))
+
+            is Identifier ->
+                scope.variables[expression.name].value
+
+            is Literal ->
+                expression.value
+
+            else ->
+                throw InterpreterError("Unknown error.")
+        }
+    }
+}
+
+private fun Function.call(arguments: List<Int>, closureScope: Scope): Int {
+    if (arguments.size != parameterNames.params.size) {
+        throw InterpreterError("Function \'${identifier.name}\' has ${parameterNames.params.size} arguments. But ${arguments.size} arguments were given")
+    }
+
+    val callScope = Scope(closureScope)
+
+    for ((param, arg) in parameterNames.params.zip(arguments)) {
+        callScope.variables.add(param.name, InterpreterVariable(arg))
+    }
+
+    return EvaluationContext(callScope).eval(body) ?: 0
+}
+
+/**
+ * Interpreter scope mapping symbols -> values
+ */
+class Scope(val functions: ScopeDict<InterpreterCallable>, val variables: ScopeDict<InterpreterVariable>) {
+
+    constructor(parent: Scope) : this(ScopeDict(parent.functions), ScopeDict(parent.variables))
+
+    class ScopeDict<T>(private val dict: MutableMap<String, T>, private val declaredInCurrentScope: MutableSet<String>) {
+
+        constructor(parentDict: ScopeDict<T>) : this(HashMap(parentDict.dict), mutableSetOf())
+
+        operator fun get(name: String): T =
+                dict[name] ?: throw InterpreterError("Symbol \'$name\' not found.")
+
+        fun add(name: String, value: T) {
+            if (name in declaredInCurrentScope) {
+                throw InterpreterError("Symbol \'$name\' is already declared in current scope.")
             }
-            throw InterpreterError("Unknown variable name \"$symbol\".")
+            dict[name] = value
+            declaredInCurrentScope.add(name)
         }
     }
 }
