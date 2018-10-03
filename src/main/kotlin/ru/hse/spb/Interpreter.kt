@@ -86,9 +86,6 @@ class EvaluationContext(private val scope: Scope) {
 
             is Literal ->
                 expression.value
-
-            else ->
-                throw InterpreterError("Unknown error.")
         }
     }
 }
