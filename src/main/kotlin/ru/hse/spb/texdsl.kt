@@ -52,7 +52,7 @@ abstract class SingleTag(val name: String, val argument: String, vararg val para
 
 
 class UsePackage(argument: String, vararg params: String) : SingleTag("usepackage", argument, *params)
-class DocumentClass(argument: String, vararg params: String) : SingleTag("documentClass", argument, *params)
+class DocumentClass(argument: String, vararg params: String) : SingleTag("documentclass", argument, *params)
 
 
 class Math(private val content: String) : Element() {

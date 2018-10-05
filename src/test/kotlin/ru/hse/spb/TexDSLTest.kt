@@ -165,7 +165,7 @@ class TexDSLTest {
         }.toString().trimIndent()
 
         val expected = """
-            \documentClass{beamer}
+            \documentclass{beamer}
             \usepackage[russian]{babel}
             \begin{document}
               \begin{frame}[arg1=arg2]
