@@ -145,8 +145,5 @@ class Document : CustomTag("document") {
 }
 
 
-fun document(init: Document.() -> Unit): Document {
-    val document = Document()
-    document.init()
-    return document
-}
+fun document(init: Document.() -> Unit): Document =
+        Document().apply(init)
