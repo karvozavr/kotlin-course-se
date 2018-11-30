@@ -9,7 +9,7 @@ private const val TEX_INDENT = "  "
 annotation class TexMaker
 
 fun renderParams(params: List<String>) =
-        if (!params.isEmpty()) "[${params.joinToString(", ")}]" else ""
+        if (params.isNotEmpty()) "[${params.joinToString(", ")}]" else ""
 
 
 infix fun String.to(value: String): String {
@@ -20,15 +20,11 @@ infix fun String.to(value: String): String {
 abstract class Element {
     abstract fun render(builder: StringBuilder, indent: String)
 
-    override fun toString(): String {
-        val stringBuilder = StringBuilder()
-        render(stringBuilder, "")
-        return stringBuilder.toString()
-    }
+    override fun toString(): String =
+            buildString { render(this, "") }
 
     fun toOutputStream(out: OutputStream) {
-        val writer = out.writer()
-        writer.use {
+        out.writer().use {
             it.append(toString())
         }
     }
@@ -74,7 +70,7 @@ open class CustomTag(val name: String, vararg val params: String) : Element() {
     val children = arrayListOf<Element>()
 
     operator fun String.unaryPlus() {
-        children.add(TextElement(this))
+        children += TextElement(this)
     }
 
     override fun render(builder: StringBuilder, indent: String) {
@@ -129,8 +125,6 @@ class Item : CustomTag("item") {
 
 
 class Enumerable(name: String) : CustomTag(name) {
-
-
     fun item(init: Item.() -> Unit): Item = initTag(Item(), init)
 }
 
